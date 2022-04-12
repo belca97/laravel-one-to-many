@@ -6,11 +6,10 @@
         <div class="col-md-12">
 
           <h1>Crea un nuovo post</h1>
-          <form method="POST" action="{{route('admin.posts.store')}}">
+          <form method="POST" action="{{route('admin.posts.update', $post->id)}}">
 
                   @csrf
-
-
+                  @method('PUT')
 
                   <div class="form-group">
                     <label for="category_id">Categorie</label>
@@ -25,17 +24,16 @@
                     </select>
                   </div>
 
-
                   <div class="form-group">
 
                     <label for="title">Titolo</label>
-                    <input type="text" class="form-control" id="title" name="title" value="{{old('title')}}">
+                    <input type="text" class="form-control" id="title" name="title" value="{{old('title', $post->title)}}">
                   
                   </div>
 
                   <div class="form-group">
                     <label for="content">Contenuto del form</label>
-                    <textarea class="form-control" id="content" rows="10" name="content" value="">{{old('content')}}</textarea>
+                    <textarea class="form-control" id="content" rows="10" name="content" value="">{{old('content', $post->content)}}</textarea>
                   </div>
                   <button type="submit" class="btn btn-primary">Salva</button>
           </form>          

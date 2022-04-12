@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Post;
+use App\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -26,7 +28,10 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('admin.post.create');
+
+        $categories = Category::all();
+
+        return view('admin.post.create', compact('categories'));
     }
 
     /**
@@ -40,9 +45,40 @@ class PostController extends Controller
         $request->validate(
             [
                 'title' => 'required|min:5',
-                'content' => 'require|min:10'
+                'content' => 'required|min:10',
+                'category_id' => 'nullable|exists:categories,id',  //<- previene un inserimento errato
+                //nella select
             ]
             );
+
+        $data = $request->all();
+
+        // Titolo : impara a programmare
+
+        //Titolo -> slug = impara-a-programmare
+
+        $slug = Str::slug($data['title']); //<- Il metodo slug genera un url amichevole da una stringa ricevuta
+
+
+        $counter = 1;
+
+        while(Post::where('slug', $slug)->first()) {
+
+            //Utilizzo un contatore per evitare omonimia sui titoli, se il titolo è uguale
+            //allora verrà messo un numero identificato dal contatore
+
+            $slug = Str::slug($data['title']) . '-' . $counter;
+            $counter++;
+
+        }
+
+        $data ['slug'] = $slug;
+
+        $post = new Post();
+        $post->fill($data);
+        $post->save();
+
+        return redirect()->route('admin.posts.index');
     }
 
     /**
@@ -51,9 +87,9 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Post $post) //<- Dependency injection
     {
-        //
+        return view('admin.post.show' , compact('post'));
     }
 
     /**
@@ -62,9 +98,13 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Post $post)
     {
-        //
+
+        $categories = Category::all();
+
+
+        return view('admin.post.edit', compact('post', 'categories'));
     }
 
     /**
@@ -74,9 +114,48 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Post $post, Request $request)
     {
-        //
+        $request->validate(
+            [
+                'title' => 'required|min:5',
+                'content' => 'required|min:10',
+                'category_id' => 'nullable|exists:categories,id'
+            ]
+            );
+
+        $data = $request->all();
+
+        // Titolo : impara a programmare
+
+        //Titolo -> slug = impara-a-programmare
+
+        $slug = Str::slug($data['title']); //<- Il metodo slug genera un url amichevole da una stringa ricevuta
+
+        if($post->slug != $slug){
+
+            $counter = 1;
+
+        while(Post::where('slug', $slug)->first()) {
+
+            //Utilizzo un contatore per evitare omonimia sui titoli, se il titolo è uguale
+            //allora verrà messo un numero identificato dal contatore
+
+            $slug = Str::slug($data['title']) . '-' . $counter;
+            $counter++;
+
+        }
+
+        $data ['slug'] = $slug;
+
+        }
+
+        
+
+        $post->update($data);
+        $post->save();
+
+        return redirect()->route('admin.posts.index');
     }
 
     /**
@@ -85,8 +164,9 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        //
+        $post->delete();
+        return redirect()->route('admin.posts.index');
     }
 }
